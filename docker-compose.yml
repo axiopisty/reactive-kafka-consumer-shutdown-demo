@@ -1,0 +1,63 @@
+version: "3.6"
+
+services:
+
+  ######################################################################################################################
+  # Run an instance of Kafka. It is configured to be able to communicate with producers/consumers from within the docker
+  # network at "kafka:9092" and from the host network at "localhost:9091"
+  ######################################################################################################################
+  kafka:
+    image: confluentinc/cp-kafka:7.2.1
+    networks:
+      - mre-reactive-kafka-consumer-shutdown-demo-network
+    container_name: kafka
+    ports:
+      - 9091:9091
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_INTER_BROKER_LISTENER_NAME:                          CONTAINER
+      KAFKA_ADVERTISED_LISTENERS:                                CONTAINER://kafka:9092 , HOST_MACHINE://localhost:9091
+      KAFKA_LISTENERS:                      QUORUM://kafka:9093, CONTAINER://kafka:9092 , HOST_MACHINE://kafka:9091
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: QUORUM:PLAINTEXT   , CONTAINER:PLAINTEXT    , HOST_MACHINE:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES:      QUORUM
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:9093'
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    volumes:
+      - ./docker/kafka/run_workaround.sh:/tmp/run_workaround.sh
+      - mre-reactive-kafka-consumer-shutdown-demo-kafka-volume:/var/lib/kafka/data
+    command: "bash -c '/tmp/run_workaround.sh && /etc/confluent/docker/run'"
+
+  ######################################################################################################################
+  # After Kafka is up and running, initialize a kafka topic named "demo-topic" that can be used by both the
+  # producer/consumer applications.
+  ######################################################################################################################
+  init-kafka:
+    image: confluentinc/cp-kafka:7.2.1
+    networks:
+      - mre-reactive-kafka-consumer-shutdown-demo-network
+    depends_on:
+      - kafka
+    entrypoint: [ '/bin/bash', '-c']
+    command: |
+      "
+      # blocks until kafka is reachable
+      kafka-topics --bootstrap-server kafka:9092 --list
+      echo -e 'Creating kafka topics if they do not exist already'
+      kafka-topics \
+        --bootstrap-server kafka:9092 \
+        --create \
+        --if-not-exists \
+        --topic demo-topic \
+        --replication-factor 1 \
+        --partitions 1
+      echo -e 'The following topics exist:'
+      kafka-topics --bootstrap-server kafka:9092 --list
+      "
+
+volumes:
+  mre-reactive-kafka-consumer-shutdown-demo-kafka-volume:
+
+networks:
+  mre-reactive-kafka-consumer-shutdown-demo-network:
+    driver: bridge

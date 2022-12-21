@@ -1,0 +1,17 @@
+logging:
+  level:
+    root: info
+    com.github.axiopisty: debug
+    org.apache.kafka: warn
+spring:
+  application:
+    name: reactive-kafka-consumer-shutdown-demo-desktop
+  kafka:
+    bootstrap-servers: localhost:9091
+    consumer:
+      group-id: ${spring.application.name}
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  profiles:
+    active: default
