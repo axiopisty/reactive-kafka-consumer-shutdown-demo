@@ -74,15 +74,15 @@ Application exit code: 130
 
 4. Run the standalone application *(**WITH** forceful shut down upon closing the GUI)*
 
-Next, lets run the application again, but this time, tell the application to forcefully kill itself once the GUI is closed. Everything is just like in the first run except after Spring Boot and JavaFX closes and execution resumes in [Main](src/main/java/com/github/axiopisty/mre/reactive/kafka/consumer/shutdown/demo/Main.java), We will wait up to 5 seconds for the non-daemon thread created by the Kafka Consumer to stop by itself. Once it does not stop after 5 seconds, the application will interrupt the thread. This will force the thread to stop, but it will not do so gracefully. You can inspect the console logs for more details.
+Next, lets run the application again, but this time, tell the application to forcefully kill itself once the GUI is closed. Everything is just like in the first run except after Spring Boot and JavaFX closes and execution resumes in [Main](src/main/java/com/github/axiopisty/mre/reactive/kafka/consumer/shutdown/demo/Main.java), We will wait up to 5 seconds for the non-daemon thread created by the Kafka Consumer to stop by itself. Once it does not stop after 5 seconds, the application will interrupt the thread. This will force the thread to stop. You can inspect the console logs for more details.
 
 ```bash
 $ java -jar target/reactive-kafka-consumer-shutdown-demo-0.0.1-SNAPSHOT.jar force-shutdown && echo "Application exit code: $?"
 ```
 
-This time the application launches, and you can inspect the logs again. The only difference will be in the shutdown log messages. Hopefully, seeing that the non-daemon thread created by the Reactive Kafka Consumer is preventing the application from shutting down gracefully will be helpful to come up with a solution to this problem.
+This time the application launches, and you can inspect the logs again. The difference will be in the log messages, and the application will shut down by itself after interrupting the thread. Hopefully, seeing that the non-daemon thread created by the Reactive Kafka Consumer is preventing the application from shutting down gracefully will be helpful to come up with a solution to this problem.
 
-Please notice I created the method [ReactiveKafkaMessageConsumer.shutdown](src/main/java/com/github/axiopisty/mre/reactive/kafka/consumer/shutdown/demo/kafka/consumer/impl/ReactiveKafkaMessageConsumer.java). On line 30, you can see that I'm trying to "pause" the `ReactiveKafkaConsumerTemplate`. I commented that line. Shouldn't there be another method that allows us to `shutdown` the reactive consumer gracefully?
+Please notice I created the method [ReactiveKafkaMessageConsumer.shutdown](src/main/java/com/github/axiopisty/mre/reactive/kafka/consumer/shutdown/demo/kafka/consumer/impl/ReactiveKafkaMessageConsumer.java). On line 30, you can see that I'm trying to "pause" the `ReactiveKafkaConsumerTemplate`. I commented that line. Shouldn't there be another method that allows us to `shutdown` the `ReactiveKafkaConsumerTemplate` gracefully?
 
 5. Don't forget to shut down the docker containers once you're done experimenting:
 
