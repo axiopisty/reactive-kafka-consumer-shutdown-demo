@@ -1,10 +1,17 @@
 # Problem Statement
 
-A standalone reactive kafka consumer application using `spring-kafka` and `reactive-kafka` does not shut down gracefully.
+A standalone reactive kafka consumer application using `spring-kafka` and `reactor-kafka` does not shut down gracefully.
 
-# MRE explanation
+# MCRE explanation
 
-I created this small standalone application to demonstrate that there is no graceful way of shutting down a standalone application that is using `spring-kafka` and `reactive-kafka`. This demo uses JavaFX, Spring Boot, Docker, and Maven.
+I found this question [Reactor Kafka how to gracefully shutdown?](https://stackoverflow.com/q/74497869/328275). One of
+the comments on that thread asked for a [MCRE](https://stackoverflow.com/help/minimal-reproducible-example), so I created 
+this small application to demonstrate that there is no graceful way of shutting down a standalone application that is 
+using `spring-kafka` and `reactor-kafka`. This demo uses JavaFX, Spring Boot, Docker, and Maven.
+
+It would be nice, if this example is used by the project maintainers to provide the means whereby graceful shutdown is 
+accomplished, if they would provide a pull request to this repository to demonstrate what (if anything) needs to be
+changed in order to gracefully shut down the consumer.
 
 # Build Environment
 
@@ -76,3 +83,13 @@ $ java -jar target/reactive-kafka-consumer-shutdown-demo-0.0.1-SNAPSHOT.jar forc
 This time the application launches, and you can inspect the logs again. The only difference will be in the shutdown log messages. Hopefully, seeing that the non-daemon thread created by the Reactive Kafka Consumer is preventing the application from shutting down gracefully will be helpful to come up with a solution to this problem.
 
 Please notice I created the method [ReactiveKafkaMessageConsumer.shutdown](src/main/java/com/github/axiopisty/mre/reactive/kafka/consumer/shutdown/demo/kafka/consumer/impl/ReactiveKafkaMessageConsumer.java). On line 30, you can see that I'm trying to "pause" the `ReactiveKafkaConsumerTemplate`. I commented that line. Shouldn't there be another method that allows us to `shutdown` the reactive consumer gracefully?
+
+5. Don't forget to shut down the docker containers once you're done experimenting:
+
+```bash
+$ docker-compose down
+```
+
+# Expected Behavior
+
+Once the GUI is closed and the Spring application and the JavaFx application lifecycles have completed (execution is returned to the `Main.main` method), the JRE should exit gracefully without needing to manually interrupt the Kafka Consumer thread.
