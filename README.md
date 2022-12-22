@@ -1,3 +1,9 @@
+# Resolved
+
+Resolving this issue was as simple as disposing of the Disposable returned by the subscribe method. There wasn't any bug/problem with reactive kafka. My previous commit enabled gracefully shutting down the application.
+
+--------------------
+
 # Problem Statement
 
 A standalone reactive kafka consumer application using `spring-kafka` and `reactor-kafka` does not shut down gracefully.
